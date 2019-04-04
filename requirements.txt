@@ -1,0 +1,11 @@
+tensorflow==1.11.0
+tensorflow_tensorboard==1.5.1
+tensorboard==1.11.0
+matplotlib==2.2.3
+tflearn==0.3.2
+gensim==3.5.0
+numpy==1.16.2
+Pillow==5.4.1
+python_gflags==3.1.2
+scikit_learn==0.19.1
+google-compute-engine==2.8.13

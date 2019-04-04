@@ -1,0 +1,17 @@
+language: python
+
+matrix:
+  include:
+    - python: 3.5
+    - python: 3.6
+
+install:
+  - pip install -r requirements.txt
+  - pip install coveralls
+
+before_script:
+  - export PYTHONPATH=$PWD
+
+script:
+  - true # add other tests here
+  - coveralls

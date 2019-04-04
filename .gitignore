@@ -1,0 +1,131 @@
+### Compiled source ###
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+### Packages ###
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+### Logs and databases ###
+*.log
+*.sql
+*.sqlite
+
+### Mac OS generated files ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+### JetBrain config files ###
+.idea
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+*.npy
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*,cover
+
+# Translations
+*.mo
+*.pot
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+### IPythonNotebook ###
+# Temporary data
+.ipynb_checkpoints/
+
+### Current Project ###
+# Data File
+*.txt
+*.tsv
+*.csv
+*.json
+*.jpg
+*.png
+*.pickle
+!/data
+!/data/data_sample.json
+
+# Model File
+*.model
+*.pb
+runs/
+graph/
+RNN/MyAttention.py
+RNN/text_rnn_raw.py
+MANN/
+RCNN/text_rcnn_*.py
+
+# Analysis File
+Data Analysis.md
+
+# Log File
+logs/
+
+# Related Code
+temp.py
+
+### Else ###
+randolph/
+Icon?
+*.graffle
