@@ -47,10 +47,16 @@ You can use `jieba` package if you are going to deal with the Chinese text data.
 ### Data Format
 
 This repository can be used in other datasets (text classification) in two ways:
-1. Modify your datasets into the same format of the sample.
+1. Modify your datasets into the same format of [the sample](https://github.com/RandolphVI/Multi-Label-Text-Classification/blob/master/data/data_sample.json).
 2. Modify the data preprocess code in `data_helpers.py`.
 
 Anyway, it should depend on what your data and task are.
+
+**🤔Before you open the new issue about the data format, please check the `data_sample.json` and read the other open issues first, because someone maybe ask me the same question already. For example:**
+
+- [输入文件的格式是什么样子的？](https://github.com/RandolphVI/Multi-Label-Text-Classification/issues/1)
+- [Where is the dataset for training?](https://github.com/RandolphVI/Multi-Label-Text-Classification/issues/7)
+- [在 data_helpers.py 中的 content.txt 与 metadata.tsv 是什么，具体格式是什么，能否提供一个样例？](https://github.com/RandolphVI/Multi-Label-Text-Classification/issues/12)
 
 ### Pre-trained Word Vectors
 
