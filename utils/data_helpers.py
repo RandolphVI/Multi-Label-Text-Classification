@@ -2,23 +2,55 @@
 __author__ = 'Randolph'
 
 import os
+import time
 import heapq
 import multiprocessing
 import gensim
 import logging
 import json
-import numpy as np
 
 from collections import OrderedDict
 from pylab import *
+from texttable import Texttable
 from gensim.models import word2vec
 from tflearn.data_utils import pad_sequences
 
 TEXT_DIR = '../data/content.txt'
-METADATA_DIR = '../data/metadata.tsv'
+ANALYSIS_DIR = '../data/data_analysis/'
+
+
+def _option(pattern):
+    """
+    Get the option according to the pattern.
+    (pattern 0: Choose training or restore; pattern 1: Choose best or latest checkpoint.)
+
+    Args:
+        pattern: 0 for training step. 1 for testing step.
+    Returns:
+        The OPTION
+    """
+    if pattern == 0:
+        OPTION = input("[Input] Train or Restore? (T/R): ")
+        while not (OPTION.upper() in ['T', 'R']):
+            OPTION = input("[Warning] The format of your input is illegal, please re-input: ")
+    if pattern == 1:
+        OPTION = input("Load Best or Latest Model? (B/L): ")
+        while not (OPTION.isalpha() and OPTION.upper() in ['B', 'L']):
+            OPTION = input("[Warning] The format of your input is illegal, please re-input: ")
+    return OPTION.upper()
 
 
 def logger_fn(name, input_file, level=logging.INFO):
+    """
+    The Logger.
+
+    Args:
+        name: The name of the logger
+        input_file: The logger file path
+        level: The logger level
+    Returns:
+        The logger
+    """
     tf_logger = logging.getLogger(name)
     tf_logger.setLevel(level)
     log_dir = os.path.dirname(input_file)
@@ -29,6 +61,62 @@ def logger_fn(name, input_file, level=logging.INFO):
     fh.setFormatter(formatter)
     tf_logger.addHandler(fh)
     return tf_logger
+
+
+def tab_printer(args, logger):
+    """
+    Function to print the logs in a nice tabular format.
+
+    Args:
+        args: Parameters used for the model.
+        logger: The logger
+    """
+    args = vars(args)
+    keys = sorted(args.keys())
+    t = Texttable()
+    t.add_rows([[k.replace("_", " ").capitalize(), args[k]] for k in keys])
+    t.add_rows([["Parameter", "Value"]])
+    logger.info('\n' + t.draw())
+
+
+def get_out_dir(option, logger):
+    """
+    Get the out dir.
+
+    Args:
+        option: Train or Restore
+        logger: The logger
+    Returns:
+        The output dir
+    """
+    if option == 'T':
+        timestamp = str(int(time.time()))
+        out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", timestamp))
+        logger.info("Writing to {0}\n".format(out_dir))
+    if option == 'R':
+        MODEL = input("[Input] Please input the checkpoints model you want to restore, "
+                      "it should be like (1490175368): ")  # The model you want to restore
+
+        while not (MODEL.isdigit() and len(MODEL) == 10):
+            MODEL = input("[Warning] The format of your input is illegal, please re-input: ")
+        out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", MODEL))
+        logger.info("Writing to {0}\n".format(out_dir))
+    return out_dir
+
+
+def get_model_name():
+    """
+    Get the model name used for test.
+
+    Returns:
+        The model name
+    """
+    MODEL = input("[Input] Please input the model file you want to test, it should be like (1490175368): ")
+
+    while not (MODEL.isdigit() and len(MODEL) == 10):
+        MODEL = input("[Warning] The format of your input is illegal, "
+                      "it should be like (1490175368), please re-input: ")
+    return MODEL
 
 
 def create_prediction_file(output_file, data_id, all_labels, all_predict_labels, all_predict_scores):
@@ -42,10 +130,10 @@ def create_prediction_file(output_file, data_id, all_labels, all_predict_labels,
         all_predict_labels: The all predict labels by threshold
         all_predict_scores: The all predict scores by threshold
     Raises:
-        IOError: If the prediction file is not a <.json> file
+        IOError: If the prediction file is not a .json file
     """
     if not output_file.endswith('.json'):
-        raise IOError("✘ The prediction file is not a json file."
+        raise IOError("[Error] The prediction file is not a json file."
                       "Please make sure the prediction data is a json file.")
     with open(output_file, 'w') as fout:
         data_size = len(all_predict_labels)
@@ -168,21 +256,18 @@ def get_label_topk(scores, top_num=1):
     return predicted_labels, predicted_scores
 
 
-def create_metadata_file(embedding_size, output_file=METADATA_DIR):
+def create_metadata_file(word2vec_file, output_file):
     """
-    Create the metadata file based on the corpus file(Use for the Embedding Visualization later).
+    Create the metadata file based on the corpus file (Used for the Embedding Visualization later).
 
     Args:
-        embedding_size: The embedding size
-        output_file: The metadata file (default: 'metadata.tsv')
+        word2vec_file: The word2vec file
+        output_file: The metadata file path
     Raises:
         IOError: If word2vec model file doesn't exist
     """
-    word2vec_file = '../data/word2vec_' + str(embedding_size) + '.model'
-
     if not os.path.isfile(word2vec_file):
-        raise IOError("✘ The word2vec file doesn't exist."
-                      "Please use function <create_vocab_size(embedding_size)> to create it!")
+        raise IOError("[Error] The word2vec file doesn't exist.")
 
     model = gensim.models.Word2Vec.load(word2vec_file)
     word2idx = dict([(k, v.index) for k, v in model.wv.vocab.items()])
@@ -191,7 +276,7 @@ def create_metadata_file(embedding_size, output_file=METADATA_DIR):
     with open(output_file, 'w+') as fout:
         for word in word2idx_sorted:
             if word[0] is None:
-                print("Empty Line, should replaced by any thing else, or will cause a bug of tensorboard")
+                print("[Warning] Empty Line, should replaced by any thing else, or will cause a bug of tensorboard")
                 fout.write('<Empty Line>' + '\n')
             else:
                 fout.write(word[0] + '\n')
@@ -214,22 +299,20 @@ def create_word2vec_model(embedding_size, input_file=TEXT_DIR):
     model.save(word2vec_file)
 
 
-def load_word2vec_matrix(embedding_size):
+def load_word2vec_matrix(embedding_size, word2vec_file):
     """
     Return the word2vec model matrix.
 
     Args:
         embedding_size: The embedding size
+        word2vec_file: The word2vec file
     Returns:
         The word2vec model matrix
     Raises:
         IOError: If word2vec model file doesn't exist
     """
-    word2vec_file = '../data/word2vec_' + str(embedding_size) + '.model'
-
     if not os.path.isfile(word2vec_file):
-        raise IOError("✘ The word2vec file doesn't exist. "
-                      "Please use function <create_vocab_size(embedding_size)> to create it!")
+        raise IOError("[Error] The word2vec file doesn't exist. ")
 
     model = gensim.models.Word2Vec.load(word2vec_file)
     vocab_size = len(model.wv.vocab.items())
@@ -251,7 +334,7 @@ def data_word2vec(input_file, num_labels, word2vec_model):
         num_labels: The number of classes
         word2vec_model: The word2vec model file
     Returns:
-        The class Data (includes the data tokenindex and data labels)
+        The Class _Data() (includes the data tokenindex and data labels)
     Raises:
         IOError: If the input file is not the .json file
     """
@@ -273,7 +356,7 @@ def data_word2vec(input_file, num_labels, word2vec_model):
         return label
 
     if not input_file.endswith('.json'):
-        raise IOError("✘ The research data is not a json file. "
+        raise IOError("[Error] The research data is not a json file. "
                       "Please preprocess the research data into the json file.")
     with open(input_file) as fin:
         testid_list = []
@@ -330,13 +413,13 @@ def data_word2vec(input_file, num_labels, word2vec_model):
 
 def data_augmented(data, drop_rate=1.0):
     """
-    Data augmented.
+    Data augment.
 
     Args:
-        data: The Class Data()
+        data: The Class _Data()
         drop_rate: The drop rate
     Returns:
-        aug_data
+        The Class _AugData()
     """
     aug_num = data.number
     aug_testid = data.testid
@@ -417,7 +500,7 @@ def load_data_and_labels(data_file, num_labels, embedding_size, data_aug_flag):
     """
     word2vec_file = '../data/word2vec_' + str(embedding_size) + '.model'
 
-    # Load word2vec model file
+    # Load word2vec file
     if not os.path.isfile(word2vec_file):
         create_word2vec_model(embedding_size, TEXT_DIR)
 
@@ -459,13 +542,12 @@ def plot_seq_len(data_file, data, percentage=0.98):
         data: The class Data (includes the data tokenindex and data labels)
         percentage: The percentage of the total data you want to show
     """
-    data_analysis_dir = '../data/data_analysis/'
     if 'train' in data_file.lower():
-        output_file = data_analysis_dir + 'Train Sequence Length Distribution Histogram.png'
+        output_file = ANALYSIS_DIR + 'Train Sequence Length Distribution Histogram.png'
     if 'validation' in data_file.lower():
-        output_file = data_analysis_dir + 'Validation Sequence Length Distribution Histogram.png'
+        output_file = ANALYSIS_DIR + 'Validation Sequence Length Distribution Histogram.png'
     if 'test' in data_file.lower():
-        output_file = data_analysis_dir + 'Test Sequence Length Distribution Histogram.png'
+        output_file = ANALYSIS_DIR + 'Test Sequence Length Distribution Histogram.png'
     result = dict()
     for x in data.tokenindex:
         if len(x) not in result.keys():
