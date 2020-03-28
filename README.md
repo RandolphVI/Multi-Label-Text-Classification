@@ -9,9 +9,35 @@ The main objective of the project is to solve the multi-label text classificatio
 ## Requirements
 
 - Python 3.6
-- Tensorflow 1.1 +
+- Tensorflow 1.4 +
 - Numpy
 - Gensim
+
+## Project
+
+The project structure is below:
+
+```text
+.
+├── Model
+│   ├── test_model.py
+│   ├── text_model.py
+│   └── train_model.py
+├── data
+│   ├── word2vec_100.model [Need Download]
+│   ├── Test_sample.json
+│   ├── Train_sample.json
+│   └── Validation_sample.json
+└── utils
+│   ├── checkmate.py
+│   ├── data_helpers.py
+│   └── param_parser.py
+├── LICENSE
+├── README.md
+└── requirements.txt
+```
+
+
 
 ## Innovation
 
