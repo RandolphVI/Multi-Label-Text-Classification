@@ -104,7 +104,9 @@ target/
 *.png
 *.pickle
 !/data
-!/data/data_sample.json
+!/data/Train_sample.json
+!/data/Validation_sample.json
+!/data/Test_sample.json
 
 # Model File
 *.model
