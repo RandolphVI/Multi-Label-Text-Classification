@@ -25,7 +25,6 @@ BEST_CPT_DIR = 'runs/' + MODEL + '/bestcheckpoints/'
 SAVE_DIR = 'output/' + MODEL
 
 
-
 def test_ann():
     """Test ANN model."""
     # Print parameters used for the model

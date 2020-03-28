@@ -50,6 +50,21 @@ def parameter_parser():
                         default=100,
                         help="Dimensionality of character embedding. (default: 300)")
 
+    parser.add_argument("--filter-sizes",
+                        type=list,
+                        default=[3, 4, 5],
+                        help="Filter sizes. (default: [3, 4, 5])")
+
+    parser.add_argument("--num-filters",
+                        type=int,
+                        default=128,
+                        help="Number of filters per filter size. (default: 128)")
+
+    parser.add_argument("--pooling-size",
+                        type=int,
+                        default=3,
+                        help="Pooling sizes. (default: 3)")
+
     parser.add_argument("--lstm-dim",
                         type=int,
                         default=256,
