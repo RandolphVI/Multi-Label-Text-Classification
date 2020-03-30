@@ -9,8 +9,8 @@ class TextHAN(object):
     """A HAN for text classification."""
 
     def __init__(
-            self, sequence_length, num_classes, vocab_size, lstm_hidden_size, fc_hidden_size,
-            embedding_size, embedding_type, l2_reg_lambda=0.0, pretrained_embedding=None):
+            self, sequence_length, vocab_size, embedding_type, embedding_size, lstm_hidden_size,
+            fc_hidden_size, num_classes, l2_reg_lambda=0.0, pretrained_embedding=None):
 
         # Placeholders for input, output, dropout_prob and training_tag
         self.input_x = tf.placeholder(tf.int32, [None, sequence_length], name="input_x")

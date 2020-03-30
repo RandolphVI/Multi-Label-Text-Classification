@@ -77,8 +77,13 @@ def parameter_parser():
 
     parser.add_argument("--attention-dim",
                         type=int,
-                        default=200,
+                        default=350,
                         help="Dimensionality of Attention Neurons. (default: 200)")
+
+    parser.add_argument("--attention-hops-dim",
+                        type=int,
+                        default=30,
+                        help="Dimensionality of Attention hops. (default: 30)")
 
     parser.add_argument("--fc-dim",
                         type=int,
