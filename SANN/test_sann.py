@@ -87,7 +87,7 @@ def test_sann():
 
             test_pre_tk = [0.0] * args.topK
             test_rec_tk = [0.0] * args.topK
-            test_F_tk = [0.0] * args.topK
+            test_F1_tk = [0.0] * args.topK
 
             # Collect the predictions here
             true_labels = []
@@ -149,8 +149,8 @@ def test_sann():
                                           y_pred=np.array(predicted_onehot_labels_ts), average='micro')
             test_rec_ts = recall_score(y_true=np.array(true_onehot_labels),
                                        y_pred=np.array(predicted_onehot_labels_ts), average='micro')
-            test_F_ts = f1_score(y_true=np.array(true_onehot_labels),
-                                 y_pred=np.array(predicted_onehot_labels_ts), average='micro')
+            test_F1_ts = f1_score(y_true=np.array(true_onehot_labels),
+                                  y_pred=np.array(predicted_onehot_labels_ts), average='micro')
 
             for top_num in range(args.topK):
                 test_pre_tk[top_num] = precision_score(y_true=np.array(true_onehot_labels),
@@ -159,9 +159,9 @@ def test_sann():
                 test_rec_tk[top_num] = recall_score(y_true=np.array(true_onehot_labels),
                                                     y_pred=np.array(predicted_onehot_labels_tk[top_num]),
                                                     average='micro')
-                test_F_tk[top_num] = f1_score(y_true=np.array(true_onehot_labels),
-                                              y_pred=np.array(predicted_onehot_labels_tk[top_num]),
-                                              average='micro')
+                test_F1_tk[top_num] = f1_score(y_true=np.array(true_onehot_labels),
+                                               y_pred=np.array(predicted_onehot_labels_tk[top_num]),
+                                               average='micro')
 
             # Calculate the average AUC
             test_auc = roc_auc_score(y_true=np.array(true_onehot_labels),
@@ -177,13 +177,13 @@ def test_sann():
 
             # Predict by threshold
             logger.info("Predict by threshold: Precision {0:g}, Recall {1:g}, F1 {2:g}"
-                        .format(test_pre_ts, test_rec_ts, test_F_ts))
+                        .format(test_pre_ts, test_rec_ts, test_F1_ts))
 
             # Predict by topK
             logger.info("Predict by topK:")
             for top_num in range(args.topK):
                 logger.info("Top{0}: Precision {1:g}, Recall {2:g}, F {3:g}"
-                            .format(top_num + 1, test_pre_tk[top_num], test_rec_tk[top_num], test_F_tk[top_num]))
+                            .format(top_num + 1, test_pre_tk[top_num], test_rec_tk[top_num], test_F1_tk[top_num]))
 
             # Save the prediction result
             if not os.path.exists(SAVE_DIR):

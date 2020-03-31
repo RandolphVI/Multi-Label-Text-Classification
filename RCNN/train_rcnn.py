@@ -155,7 +155,7 @@ def train_rcnn():
 
                 eval_pre_tk = [0.0] * args.topK
                 eval_rec_tk = [0.0] * args.topK
-                eval_F_tk = [0.0] * args.topK
+                eval_F1_tk = [0.0] * args.topK
 
                 true_onehot_labels = []
                 predicted_onehot_scores = []
@@ -206,8 +206,8 @@ def train_rcnn():
                                               y_pred=np.array(predicted_onehot_labels_ts), average='micro')
                 eval_rec_ts = recall_score(y_true=np.array(true_onehot_labels),
                                            y_pred=np.array(predicted_onehot_labels_ts), average='micro')
-                eval_F_ts = f1_score(y_true=np.array(true_onehot_labels),
-                                     y_pred=np.array(predicted_onehot_labels_ts), average='micro')
+                eval_F1_ts = f1_score(y_true=np.array(true_onehot_labels),
+                                      y_pred=np.array(predicted_onehot_labels_ts), average='micro')
 
                 for top_num in range(args.topK):
                     eval_pre_tk[top_num] = precision_score(y_true=np.array(true_onehot_labels),
@@ -216,9 +216,9 @@ def train_rcnn():
                     eval_rec_tk[top_num] = recall_score(y_true=np.array(true_onehot_labels),
                                                         y_pred=np.array(predicted_onehot_labels_tk[top_num]),
                                                         average='micro')
-                    eval_F_tk[top_num] = f1_score(y_true=np.array(true_onehot_labels),
-                                                  y_pred=np.array(predicted_onehot_labels_tk[top_num]),
-                                                  average='micro')
+                    eval_F1_tk[top_num] = f1_score(y_true=np.array(true_onehot_labels),
+                                                   y_pred=np.array(predicted_onehot_labels_tk[top_num]),
+                                                   average='micro')
 
                 # Calculate the average AUC
                 eval_auc = roc_auc_score(y_true=np.array(true_onehot_labels),
@@ -227,8 +227,8 @@ def train_rcnn():
                 eval_prc = average_precision_score(y_true=np.array(true_onehot_labels),
                                                    y_score=np.array(predicted_onehot_scores), average='micro')
 
-                return eval_loss, eval_auc, eval_prc, eval_rec_ts, eval_pre_ts, eval_F_ts, \
-                       eval_rec_tk, eval_pre_tk, eval_F_tk
+                return eval_loss, eval_auc, eval_prc, eval_pre_ts, eval_rec_ts, eval_F1_ts, \
+                       eval_pre_tk, eval_rec_tk, eval_F1_tk
 
             # Generate batches
             batches_train = dh.batch_iter(
@@ -245,21 +245,21 @@ def train_rcnn():
                 if current_step % args.evaluate_steps == 0:
                     logger.info("\nEvaluation:")
                     eval_loss, eval_auc, eval_prc, \
-                    eval_rec_ts, eval_pre_ts, eval_F_ts, eval_rec_tk, eval_pre_tk, eval_F_tk = \
+                    eval_pre_ts, eval_rec_ts, eval_F1_ts, eval_pre_tk, eval_rec_tk, eval_F1_tk = \
                         validation_step(x_val, y_val, writer=validation_summary_writer)
 
                     logger.info("All Validation set: Loss {0:g} | AUC {1:g} | AUPRC {2:g}"
                                 .format(eval_loss, eval_auc, eval_prc))
 
                     # Predict by threshold
-                    logger.info("Predict by threshold: Precision {0:g}, Recall {1:g}, F {2:g}"
-                                .format(eval_pre_ts, eval_rec_ts, eval_F_ts))
+                    logger.info("Predict by threshold: Precision {0:g}, Recall {1:g}, F1 {2:g}"
+                                .format(eval_pre_ts, eval_rec_ts, eval_F1_ts))
 
                     # Predict by topK
                     logger.info("Predict by topK:")
                     for top_num in range(args.topK):
-                        logger.info("Top{0}: Precision {1:g}, Recall {2:g}, F {3:g}"
-                                    .format(top_num+1, eval_pre_tk[top_num], eval_rec_tk[top_num], eval_F_tk[top_num]))
+                        logger.info("Top{0}: Precision {1:g}, Recall {2:g}, F1 {3:g}"
+                                    .format(top_num+1, eval_pre_tk[top_num], eval_rec_tk[top_num], eval_F1_tk[top_num]))
                     best_saver.handle(eval_prc, sess, current_step)
                 if current_step % args.checkpoint_steps == 0:
                     checkpoint_prefix = os.path.join(checkpoint_dir, "model")
