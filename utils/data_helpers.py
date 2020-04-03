@@ -15,7 +15,6 @@ from texttable import Texttable
 from gensim.models import word2vec
 from tflearn.data_utils import pad_sequences
 
-TEXT_DIR = '../data/content.txt'
 ANALYSIS_DIR = '../data/data_analysis/'
 
 
@@ -282,23 +281,6 @@ def create_metadata_file(word2vec_file, output_file):
                 fout.write(word[0] + '\n')
 
 
-def create_word2vec_model(embedding_size, input_file=TEXT_DIR):
-    """
-    Create the word2vec model based on the given embedding size and the corpus file.
-
-    Args:
-        embedding_size: The embedding size
-        input_file: The corpus file
-    """
-    word2vec_file = '../data/word2vec_' + str(embedding_size) + '.model'
-
-    sentences = word2vec.LineSentence(input_file)
-    # sg=0 means use CBOW model(default); sg=1 means use skip-gram model.
-    model = gensim.models.Word2Vec(sentences, size=embedding_size, min_count=0,
-                                   sg=0, workers=multiprocessing.cpu_count())
-    model.save(word2vec_file)
-
-
 def load_word2vec_matrix(embedding_size, word2vec_file):
     """
     Return the word2vec model matrix.
@@ -485,7 +467,7 @@ def data_augmented(data, drop_rate=1.0):
     return _AugData()
 
 
-def load_data_and_labels(data_file, num_labels, embedding_size, data_aug_flag):
+def load_data_and_labels(data_file, num_labels, word2vec_file, data_aug_flag):
     """
     Load research data from files, splits the data into words and generates labels.
     Return split sentences, labels and the max sentence length of the research data.
@@ -493,16 +475,14 @@ def load_data_and_labels(data_file, num_labels, embedding_size, data_aug_flag):
     Args:
         data_file: The research data
         num_labels: The number of classes
-        embedding_size: The embedding size
+        word2vec_file: The embedding size
         data_aug_flag: The flag of data augmented
     Returns:
         The class Data
     """
-    word2vec_file = '../data/word2vec_' + str(embedding_size) + '.model'
-
     # Load word2vec file
     if not os.path.isfile(word2vec_file):
-        create_word2vec_model(embedding_size, TEXT_DIR)
+        raise IOError("[Error] The word2vec file doesn't exist. ")
 
     model = word2vec.Word2Vec.load(word2vec_file)
 

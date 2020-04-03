@@ -181,7 +181,7 @@ def test_ann():
             # Predict by topK
             logger.info("Predict by topK:")
             for top_num in range(args.topK):
-                logger.info("Top{0}: Precision {1:g}, Recall {2:g}, F {3:g}"
+                logger.info("Top{0}: Precision {1:g}, Recall {2:g}, F1 {3:g}"
                             .format(top_num + 1, test_pre_tk[top_num], test_rec_tk[top_num], test_F1_tk[top_num]))
 
             # Save the prediction result

@@ -34,7 +34,7 @@ def test_fasttext():
     # Load data
     logger.info("Loading data...")
     logger.info("Data processing...")
-    test_data = dh.load_data_and_labels(args.test_file, args.num_classes, args.embedding_dim, data_aug_flag=False)
+    test_data = dh.load_data_and_labels(args.test_file, args.num_classes, args.word2vec_file, data_aug_flag=False)
 
     logger.info("Data padding...")
     x_test, y_test = dh.pad_data(test_data, args.pad_seq_len)
@@ -182,7 +182,7 @@ def test_fasttext():
             # Predict by topK
             logger.info("Predict by topK:")
             for top_num in range(args.topK):
-                logger.info("Top{0}: Precision {1:g}, Recall {2:g}, F {3:g}"
+                logger.info("Top{0}: Precision {1:g}, Recall {2:g}, F1 {3:g}"
                             .format(top_num + 1, test_pre_tk[top_num], test_rec_tk[top_num], test_F1_tk[top_num]))
 
             # Save the prediction result
