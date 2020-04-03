@@ -33,7 +33,7 @@ def test_ann():
     # Load data
     logger.info("Loading data...")
     logger.info("Data processing...")
-    test_data = dh.load_data_and_labels(args.test_file, args.num_classes, args.embedding_dim, data_aug_flag=False)
+    test_data = dh.load_data_and_labels(args.test_file, args.num_classes, args.word2vec_file, data_aug_flag=False)
 
     logger.info("Data padding...")
     x_test, y_test = dh.pad_data(test_data, args.pad_seq_len)

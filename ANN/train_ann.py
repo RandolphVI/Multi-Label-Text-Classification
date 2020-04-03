@@ -31,8 +31,8 @@ def train_ann():
     # Load sentences, labels, and training parameters
     logger.info("Loading data...")
     logger.info("Data processing...")
-    train_data = dh.load_data_and_labels(args.train_file, args.num_classes, args.embedding_dim, data_aug_flag=False)
-    val_data = dh.load_data_and_labels(args.validation_file, args.num_classes, args.embedding_dim, data_aug_flag=False)
+    train_data = dh.load_data_and_labels(args.train_file, args.num_classes, args.word2vec_file, data_aug_flag=False)
+    val_data = dh.load_data_and_labels(args.validation_file, args.num_classes, args.word2vec_file, data_aug_flag=False)
 
     logger.info("Data padding...")
     x_train, y_train = dh.pad_data(train_data, args.pad_seq_len)
