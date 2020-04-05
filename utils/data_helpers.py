@@ -281,12 +281,11 @@ def create_metadata_file(word2vec_file, output_file):
                 fout.write(word[0] + '\n')
 
 
-def load_word2vec_matrix(embedding_size, word2vec_file):
+def load_word2vec_matrix(word2vec_file):
     """
     Return the word2vec model matrix.
 
     Args:
-        embedding_size: The embedding size
         word2vec_file: The word2vec file
     Returns:
         The word2vec model matrix
@@ -297,13 +296,14 @@ def load_word2vec_matrix(embedding_size, word2vec_file):
         raise IOError("[Error] The word2vec file doesn't exist. ")
 
     model = gensim.models.Word2Vec.load(word2vec_file)
-    vocab_size = len(model.wv.vocab.items())
+    vocab_size = model.wv.vectors.shape[0]
+    embedding_size = model.vector_size
     vocab = dict([(k, v.index) for k, v in model.wv.vocab.items()])
     embedding_matrix = np.zeros([vocab_size, embedding_size])
     for key, value in vocab.items():
         if key is not None:
             embedding_matrix[value] = model[key]
-    return vocab_size, embedding_matrix
+    return vocab_size, embedding_size, embedding_matrix
 
 
 def data_word2vec(input_file, num_labels, word2vec_model):
@@ -475,7 +475,7 @@ def load_data_and_labels(data_file, num_labels, word2vec_file, data_aug_flag):
     Args:
         data_file: The research data
         num_labels: The number of classes
-        word2vec_file: The embedding size
+        word2vec_file: The word2vec model file
         data_aug_flag: The flag of data augmented
     Returns:
         The class Data

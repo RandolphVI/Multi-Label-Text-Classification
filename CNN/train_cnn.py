@@ -40,7 +40,7 @@ def train_cnn():
     x_val, y_val = dh.pad_data(val_data, args.pad_seq_len)
 
     # Build vocabulary
-    VOCAB_SIZE, pretrained_word2vec_matrix = dh.load_word2vec_matrix(args.embedding_dim, args.word2vec_file)
+    VOCAB_SIZE, EMBEDDING_SIZE, pretrained_word2vec_matrix = dh.load_word2vec_matrix(args.word2vec_file)
 
     # Build a graph and cnn object
     with tf.Graph().as_default():
@@ -54,7 +54,7 @@ def train_cnn():
                 sequence_length=args.pad_seq_len,
                 vocab_size=VOCAB_SIZE,
                 embedding_type=args.embedding_type,
-                embedding_size=args.embedding_dim,
+                embedding_size=EMBEDDING_SIZE,
                 filter_sizes=args.filter_sizes,
                 num_filters=args.num_filters,
                 fc_hidden_size=args.fc_dim,

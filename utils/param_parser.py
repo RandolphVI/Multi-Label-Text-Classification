@@ -38,7 +38,7 @@ def parameter_parser():
     parser.add_argument("--pad-seq-len",
                         type=int,
                         default=150,
-                        help="Padding Sequence length of data. (depends on the data)")
+                        help="Padding sequence length of data. (depends on the data)")
 
     parser.add_argument("--embedding-type",
                         type=int,
@@ -48,7 +48,7 @@ def parameter_parser():
     parser.add_argument("--embedding-dim",
                         type=int,
                         default=100,
-                        help="Dimensionality of character embedding. (default: 300)")
+                        help="Dimensionality of character embedding. (default: 100)")
 
     parser.add_argument("--filter-sizes",
                         type=list,
@@ -68,17 +68,17 @@ def parameter_parser():
     parser.add_argument("--lstm-dim",
                         type=int,
                         default=256,
-                        help="Dimensionality for LSTM Neurons. (default: 256)")
+                        help="Dimensionality of LSTM neurons. (default: 256)")
 
     parser.add_argument("--lstm-layers",
                         type=int,
                         default=1,
-                        help="Number of LSTM Layers. (default: 1)")
+                        help="Number of LSTM layers. (default: 1)")
 
     parser.add_argument("--attention-dim",
                         type=int,
-                        default=350,
-                        help="Dimensionality of Attention Neurons. (default: 200)")
+                        default=200,
+                        help="Dimensionality of Attention neurons. (default: 200)")
 
     parser.add_argument("--attention-hops-dim",
                         type=int,
@@ -88,7 +88,7 @@ def parameter_parser():
     parser.add_argument("--fc-dim",
                         type=int,
                         default=512,
-                        help="Dimensionality for FC Neurons. (default: 512)")
+                        help="Dimensionality for FC neurons. (default: 512)")
 
     parser.add_argument("--dropout-rate",
                         type=float,
@@ -119,7 +119,7 @@ def parameter_parser():
     parser.add_argument("--batch-size",
                         type=int,
                         default=256,
-                        help="Batch Size. (default: 256)")
+                        help="Batch size. (default: 256)")
 
     parser.add_argument("--learning-rate",
                         type=float,
