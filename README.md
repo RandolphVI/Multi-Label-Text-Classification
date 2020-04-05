@@ -9,7 +9,7 @@ The main objective of the project is to solve the multi-label text classificatio
 ## Requirements
 
 - Python 3.6
-- Tensorflow 1.4 +
+- Tensorflow 1.4
 - Numpy
 - Gensim
 
@@ -24,7 +24,7 @@ The project structure is below:
 │   ├── text_model.py
 │   └── train_model.py
 ├── data
-│   ├── word2vec_100.model [Need Download]
+│   ├── word2vec_100.model.* [Need Download]
 │   ├── Test_sample.json
 │   ├── Train_sample.json
 │   └── Validation_sample.json
@@ -42,9 +42,9 @@ The project structure is below:
 ## Innovation
 
 ### Data part
-1. Make the data support **Chinese** and English (Which use `jieba` seems easy).
-2. Can use **your own pre-trained word vectors** (Which use `gensim` seems easy). 
-3. Add embedding visualization based on the **tensorboard**.
+1. Make the data support **Chinese** and English (Can use `jieba` or `nltk` ).
+2. Can use **your pre-trained word vectors** (Can use `gensim`). 
+3. Add embedding visualization based on the **tensorboard** (Need to create `metadata.tsv` first).
 
 ### Model part
 1. Add the correct **L2 loss** calculation operation.
@@ -57,24 +57,35 @@ The project structure is below:
 1. Can choose to **train** the model directly or **restore** the model from the checkpoint in `train.py`.
 2. Can predict the labels via **threshold** and **top-K** in `train.py` and `test.py`.
 3. Can calculate the evaluation metrics --- **AUC** & **AUPRC**.
-4. Add `test.py`, the **model test code**, it can show the predicted values and predicted labels of the data in Testset when creating the final prediction file.
+4. Can create the prediction file which including the predicted values and predicted labels of the Testset data in `test.py`.
 5. Add other useful data preprocess functions in `data_helpers.py`.
 6. Use `logging` for helping to record the whole info (including **parameters display**, **model training info**, etc.).
 7. Provide the ability to save the best n checkpoints in `checkmate.py`, whereas the `tf.train.Saver` can only save the last n checkpoints.
 
 ## Data
 
-See data format in `data` folder which including the data sample files.
+See data format in `/data` folder which including the data sample files. For example:
+
+```json
+{"testid": "3935745", "features_content": ["pore", "water", "pressure", "metering", "device", "incorporating", "pressure", "meter", "force", "meter", "influenced", "pressure", "meter", "device", "includes", "power", "member", "arranged", "control", "pressure", "exerted", "pressure", "meter", "force", "meter", "applying", "overriding", "force", "pressure", "meter", "stop", "influence", "force", "meter", "removing", "overriding", "force", "pressure", "meter", "influence", "force", "meter", "resumed"], "labels_index": [526, 534, 411], "labels_num": 3}
+```
+
+- **"testid"**: just the id.
+- **"features_content"**: the word segment (after removing the stopwords)
+- **"labels_index"**: The label index of the data records.
+- **"labels_num"**: The number of labels.
 
 ### Text Segment
 
-You can use `jieba` package if you are going to deal with the Chinese text data.
+1. You can use `nltk` package if you are going to deal with the English text data.
+
+2. You can use `jieba` package if you are going to deal with the Chinese text data.
 
 ### Data Format
 
 This repository can be used in other datasets (text classification) in two ways:
-1. Modify your datasets into the same format of [the sample](https://github.com/RandolphVI/Multi-Label-Text-Classification/blob/master/data/data_sample.json).
-2. Modify the data preprocess code in `data_helpers.py`.
+1. Modify your datasets into the same format of [the sample](https://github.com/RandolphVI/Multi-Label-Text-Classification/blob/master/data).
+2. Modify the data preprocessing code in `data_helpers.py`.
 
 Anyway, it should depend on what your data and task are.
 
@@ -86,10 +97,16 @@ Anyway, it should depend on what your data and task are.
 
 ### Pre-trained Word Vectors
 
+**You can download the [Word2vec model file](https://drive.google.com/open?id=1XM0-Y8UJcJTKEAwKlweWv-NZWakW5Wmp) (dim=100). Make sure they are unzipped and under the `/data` folder.**
+
 You can pre-training your word vectors (based on your corpus) in many ways:
 - Use `gensim` package to pre-train data.
 - Use `glove` tools to pre-train data.
 - Even can use a **fasttext** network to pre-train data.
+
+## Usage
+
+See [Usage](https://github.com/RandolphVI/Multi-Label-Text-Classification/blob/master/Usage.md).
 
 ## Network Structure
 
