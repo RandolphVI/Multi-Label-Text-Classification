@@ -7,7 +7,7 @@
 ```
   --train-file              STR    Training file.      		Default is `data/Train_sample.json`.
   --validation-file         STR    Validation file.      	Default is `data/Validation_sample.json`.
-  --testing-file            STR    Testing file.       		Default is `data/Test_sample.json`.
+  --test-file               STR    Testing file.       		Default is `data/Test_sample.json`.
   --word2vec-file           STR    Word2vec model file.		Default is `data/word2vec_100.model`.
 ```
 
