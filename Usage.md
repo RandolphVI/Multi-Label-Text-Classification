@@ -42,7 +42,7 @@
   --evaluate-steps          INT     How many steps to evluate val set.      Default is 500.
   --l2-lambda               FLOAT   L2 regularization lambda.               Default is 0.0.
   --checkpoint-steps        INT     How many steps to save model.           Default is 500.
-  --num-checkpoints         INT     Number of checkpoints to store.         Default is 500.
+  --num-checkpoints         INT     Number of checkpoints to store.         Default is 10.
 ```
 
 ## Training
