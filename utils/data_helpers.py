@@ -309,7 +309,7 @@ def load_word2vec_matrix(word2vec_file):
 def data_word2vec(input_file, num_labels, word2vec_model):
     """
     Create the research data tokenindex based on the word2vec model file.
-    Return the class Data (includes the data tokenindex and data labels).
+    Return the class _Data() (includes the data tokenindex and data labels).
 
     Args:
         input_file: The research data
@@ -478,7 +478,9 @@ def load_data_and_labels(data_file, num_labels, word2vec_file, data_aug_flag):
         word2vec_file: The word2vec model file
         data_aug_flag: The flag of data augmented
     Returns:
-        The class Data
+        The class _Data()
+    Raises:
+        IOError: If word2vec model file doesn't exist
     """
     # Load word2vec file
     if not os.path.isfile(word2vec_file):
