@@ -35,13 +35,13 @@
 
 ```
   --epochs                  INT     Number of epochs.                       Default is 100.
-  --batch-size              INT     Batch size.                             Default is 256.
+  --batch-size              INT     Batch size.                             Default is 64.
   --learning-rate           FLOAT   Adam learning rate.                     Default is 0.001.
   --decay-rate              FLOAT   Rate of decay for learning rate.        Default is 0.95.
   --decay-steps             INT     How many steps before decy lr.          Default is 500.
-  --evaluate-steps          INT     How many steps to evluate val set.      Default is 500.
+  --evaluate-steps          INT     How many steps to evluate val set.      Default is 50.
   --l2-lambda               FLOAT   L2 regularization lambda.               Default is 0.0.
-  --checkpoint-steps        INT     How many steps to save model.           Default is 500.
+  --checkpoint-steps        INT     How many steps to save model.           Default is 50.
   --num-checkpoints         INT     Number of checkpoints to store.         Default is 10.
 ```
 
