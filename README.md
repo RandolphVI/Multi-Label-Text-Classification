@@ -203,7 +203,7 @@ References:
 
 黄威，Randolph
 
-SCU SE Bachelor; USTC CS Master
+SCU SE Bachelor; USTC CS Ph.D.
 
 Email: chinawolfman@hotmail.com
 
