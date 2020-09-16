@@ -9,9 +9,10 @@ The main objective of the project is to solve the multi-label text classificatio
 ## Requirements
 
 - Python 3.6
-- Tensorflow 1.4
-- Numpy
-- Gensim
+- Tensorflow 1.15.0
+- Tensorboard 1.15.0
+- Numpy 1.16.2
+- Gensim 3.5.0
 
 ## Project
 

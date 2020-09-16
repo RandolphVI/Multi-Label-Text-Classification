@@ -1,6 +1,6 @@
-tensorflow==1.14.0
+tensorflow==1.15.0
 tensorflow_tensorboard==1.5.1
-tensorboard==1.14.0
+tensorboard==1.15.0
 matplotlib==2.2.3
 tflearn==0.3.2
 gensim==3.5.0
