@@ -13,7 +13,7 @@ The main objective of the project is to solve the multi-label text classificatio
 - Tensorboard 1.15.0
 - Sklearn 0.19.1
 - Numpy 1.16.2
-- Gensim 3.5.0
+- Gensim 3.8.3
 - Tqdm 4.49.0
 
 ## Project
