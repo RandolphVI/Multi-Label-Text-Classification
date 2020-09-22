@@ -50,16 +50,24 @@ def logger_fn(name, input_file, level=logging.INFO):
     Returns:
         The logger
     """
-    tf_logger = logging.getLogger(name)
-    tf_logger.setLevel(level)
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
     log_dir = os.path.dirname(input_file)
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-    fh = logging.FileHandler(input_file, mode='w')
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+    # File Handler
+    fh = logging.FileHandler(input_file, mode='w')
     fh.setFormatter(formatter)
-    tf_logger.addHandler(fh)
-    return tf_logger
+    logger.addHandler(fh)
+
+    # stream Handler
+    sh = logging.StreamHandler()
+    sh.setFormatter(formatter)
+    sh.setLevel(logging.INFO)
+    logger.addHandler(sh)
+    return logger
 
 
 def tab_printer(args, logger):
