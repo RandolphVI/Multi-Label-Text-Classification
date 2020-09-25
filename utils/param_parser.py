@@ -31,7 +31,7 @@ def parameter_parser():
 
     parser.add_argument("--word2vec-file",
                         nargs="?",
-                        default="../data/word2vec_100.model",
+                        default="../data/word2vec_100.kv",
                         help="Word2vec file for embedding characters (the dim need to be the same as embedding dim).")
 
     # Model Hyperparameters
@@ -138,7 +138,7 @@ def parameter_parser():
 
     parser.add_argument("--evaluate-steps",
                         type=int,
-                        default=50,
+                        default=10,
                         help="Evaluate model on val set after how many steps. (default: 50)")
 
     parser.add_argument("--norm-ratio",
@@ -153,7 +153,7 @@ def parameter_parser():
 
     parser.add_argument("--checkpoint-steps",
                         type=int,
-                        default=50,
+                        default=10,
                         help="Save model after how many steps. (default: 50)")
 
     parser.add_argument("--num-checkpoints",

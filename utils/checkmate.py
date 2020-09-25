@@ -1,6 +1,3 @@
-# -*- coding:utf-8 -*-
-__author__ = 'Randolph'
-
 import os
 import glob
 import json
@@ -9,7 +6,7 @@ import tensorflow as tf
 
 
 class BestCheckpointSaver(object):
-    """Maintains a directory containing only the best n checkpoints
+    """Maintains a directory containing only the best n checkpoints.
     Inside the directory is a best_checkpoints JSON file containing a dictionary
     mapping of the best checkpoint filepaths to the values by which the checkpoints
     are compared.  Only the best n checkpoints are contained in the directory and JSON file.
@@ -18,11 +15,12 @@ class BestCheckpointSaver(object):
     framework.
     """
     def __init__(self, save_dir, num_to_keep=1, maximize=True, saver=None):
-        """Creates a `BestCheckpointSaver`
-        `BestCheckpointSaver` acts as a wrapper class around a `tf.train.Saver`
+        """Creates a `BestCheckpointSaver`.
+        `BestCheckpointSaver` acts as a wrapper class around a `tf.train.Saver`.
+
         Args:
-            save_dir: The directory in which the checkpoint files will be saved
-            num_to_keep: The number of best checkpoint files to retain
+            save_dir: The directory in which the checkpoint files will be saved.
+            num_to_keep: The number of best checkpoint files to retain.
             maximize: Define 'best' values to be the highest values.  For example,
               set this to True if selecting for the checkpoints with the highest
               given accuracy.  Or set to False to select for checkpoints with the
@@ -45,10 +43,11 @@ class BestCheckpointSaver(object):
 
     def handle(self, value, sess, global_step):
         """Updates the set of best checkpoints based on the given result.
+
         Args:
             value: The value by which to rank the checkpoint.
-            sess: A tf.Session to use to save the checkpoint
-            global_step: The global step
+            sess: A tf.Session to use to save the checkpoint.
+            global_step: The global step.
         """
         current_ckpt = 'model-{}'.format(global_step)
         value = float(value)
@@ -117,19 +116,19 @@ class BestCheckpointSaver(object):
 
 
 def get_best_checkpoint(best_checkpoint_dir, select_maximum_value=True):
-    """
-    Returns filepath to the best checkpoint
+    """Returns filepath to the best checkpoint.
     Reads the best_checkpoints file in the best_checkpoint_dir directory.
     Returns the filepath in the best_checkpoints file associated with
     the highest value if select_maximum_value is True, or the filepath
     associated with the lowest value if select_maximum_value is False.
+
     Args:
-        best_checkpoint_dir: Directory containing best_checkpoints JSON file
+        best_checkpoint_dir: Directory containing best_checkpoints JSON file.
         select_maximum_value: If True, select the filepath associated
           with the highest value.  Otherwise, select the filepath associated
           with the lowest value.
     Returns:
-        The full path to the best checkpoint file
+        The full path to the best checkpoint file.
     """
     best_checkpoints_file = os.path.join(best_checkpoint_dir, 'best_checkpoints')
     assert os.path.exists(best_checkpoints_file)
