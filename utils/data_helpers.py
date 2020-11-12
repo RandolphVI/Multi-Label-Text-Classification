@@ -132,7 +132,7 @@ def create_prediction_file(output_file, data_id, true_labels, predict_labels, pr
 
     Args:
         output_file: The all classes predicted results provided by network.
-        data_id: The data record id info provided by class Data.
+        data_id: The data record id info provided by dict <Data>.
         true_labels: The all true labels.
         predict_labels: The all predict labels by threshold.
         predict_scores: The all predict scores by threshold.
@@ -156,14 +156,14 @@ def create_prediction_file(output_file, data_id, true_labels, predict_labels, pr
 
 def get_onehot_label_threshold(scores, threshold=0.5):
     """
-    Get the predicted onehot labels based on the threshold.
+    Get the predicted one-hot labels based on the threshold.
     If there is no predict score greater than threshold, then choose the label which has the max predict score.
 
     Args:
         scores: The all classes predicted scores provided by network.
         threshold: The threshold (default: 0.5).
     Returns:
-        predicted_onehot_labels: The predicted labels (onehot).
+        predicted_onehot_labels: The predicted labels (one-hot).
     """
     predicted_onehot_labels = []
     scores = np.ndarray.tolist(scores)
@@ -183,13 +183,13 @@ def get_onehot_label_threshold(scores, threshold=0.5):
 
 def get_onehot_label_topk(scores, top_num=1):
     """
-    Get the predicted onehot labels based on the topK number.
+    Get the predicted one-hot labels based on the topK.
 
     Args:
         scores: The all classes predicted scores provided by network.
         top_num: The max topK number (default: 5).
     Returns:
-        predicted_onehot_labels: The predicted labels (onehot).
+        predicted_onehot_labels: The predicted labels (one-hot).
     """
     predicted_onehot_labels = []
     scores = np.ndarray.tolist(scores)
@@ -237,7 +237,7 @@ def get_label_threshold(scores, threshold=0.5):
 
 def get_label_topk(scores, top_num=1):
     """
-    Get the predicted labels based on the topK number.
+    Get the predicted labels based on the topK.
     Note: Only Used in `test_model.py`
 
     Args:
