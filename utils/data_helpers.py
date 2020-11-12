@@ -4,15 +4,14 @@ __author__ = 'Randolph'
 import os
 import time
 import heapq
-import multiprocessing
 import gensim
 import logging
 import json
-
+import numpy as np
 from collections import OrderedDict
 from pylab import *
 from texttable import Texttable
-from gensim.models import word2vec
+from gensim.models import KeyedVectors
 from tflearn.data_utils import pad_sequences
 
 ANALYSIS_DIR = '../data/data_analysis/'
@@ -21,12 +20,13 @@ ANALYSIS_DIR = '../data/data_analysis/'
 def _option(pattern):
     """
     Get the option according to the pattern.
-    (pattern 0: Choose training or restore; pattern 1: Choose best or latest checkpoint.)
+    pattern 0: Choose training or restore.
+    pattern 1: Choose best or latest checkpoint.
 
     Args:
         pattern: 0 for training step. 1 for testing step.
     Returns:
-        The OPTION
+        The OPTION.
     """
     if pattern == 0:
         OPTION = input("[Input] Train or Restore? (T/R): ")
@@ -44,11 +44,11 @@ def logger_fn(name, input_file, level=logging.INFO):
     The Logger.
 
     Args:
-        name: The name of the logger
-        input_file: The logger file path
-        level: The logger level
+        name: The name of the logger.
+        input_file: The logger file path.
+        level: The logger level.
     Returns:
-        The logger
+        The logger.
     """
     logger = logging.getLogger(name)
     logger.setLevel(level)
@@ -76,7 +76,7 @@ def tab_printer(args, logger):
 
     Args:
         args: Parameters used for the model.
-        logger: The logger
+        logger: The logger.
     """
     args = vars(args)
     keys = sorted(args.keys())
@@ -88,13 +88,13 @@ def tab_printer(args, logger):
 
 def get_out_dir(option, logger):
     """
-    Get the out dir.
+    Get the out dir for saving model checkpoints.
 
     Args:
-        option: Train or Restore
-        logger: The logger
+        option: Train or Restore.
+        logger: The logger.
     Returns:
-        The output dir
+        The output dir for model checkpoints.
     """
     if option == 'T':
         timestamp = str(int(time.time()))
@@ -116,7 +116,7 @@ def get_model_name():
     Get the model name used for test.
 
     Returns:
-        The model name
+        The model name.
     """
     MODEL = input("[Input] Please input the model file you want to test, it should be like (1490175368): ")
 
@@ -126,33 +126,30 @@ def get_model_name():
     return MODEL
 
 
-def create_prediction_file(output_file, data_id, all_labels, all_predict_labels, all_predict_scores):
+def create_prediction_file(output_file, data_id, true_labels, predict_labels, predict_scores):
     """
     Create the prediction file.
 
     Args:
-        output_file: The all classes predicted results provided by network
-        data_id: The data record id info provided by class Data
-        all_labels: The all origin labels
-        all_predict_labels: The all predict labels by threshold
-        all_predict_scores: The all predict scores by threshold
+        output_file: The all classes predicted results provided by network.
+        data_id: The data record id info provided by class Data.
+        true_labels: The all true labels.
+        predict_labels: The all predict labels by threshold.
+        predict_scores: The all predict scores by threshold.
     Raises:
-        IOError: If the prediction file is not a .json file
+        IOError: If the prediction file is not a .json file.
     """
     if not output_file.endswith('.json'):
         raise IOError("[Error] The prediction file is not a json file."
                       "Please make sure the prediction data is a json file.")
     with open(output_file, 'w') as fout:
-        data_size = len(all_predict_labels)
+        data_size = len(predict_labels)
         for i in range(data_size):
-            predict_labels = [int(i) for i in all_predict_labels[i]]
-            predict_scores = [round(i, 4) for i in all_predict_scores[i]]
-            labels = [int(i) for i in all_labels[i]]
             data_record = OrderedDict([
                 ('id', data_id[i]),
-                ('labels', labels),
-                ('predict_labels', predict_labels),
-                ('predict_scores', predict_scores)
+                ('labels', [int(i) for i in true_labels[i]]),
+                ('predict_labels', [int(i) for i in predict_labels[i]]),
+                ('predict_scores', [round(i, 4) for i in predict_scores[i]])
             ])
             fout.write(json.dumps(data_record, ensure_ascii=False) + '\n')
 
@@ -163,10 +160,10 @@ def get_onehot_label_threshold(scores, threshold=0.5):
     If there is no predict score greater than threshold, then choose the label which has the max predict score.
 
     Args:
-        scores: The all classes predicted scores provided by network
-        threshold: The threshold (default: 0.5)
+        scores: The all classes predicted scores provided by network.
+        threshold: The threshold (default: 0.5).
     Returns:
-        predicted_onehot_labels: The predicted labels (onehot)
+        predicted_onehot_labels: The predicted labels (onehot).
     """
     predicted_onehot_labels = []
     scores = np.ndarray.tolist(scores)
@@ -189,10 +186,10 @@ def get_onehot_label_topk(scores, top_num=1):
     Get the predicted onehot labels based on the topK number.
 
     Args:
-        scores: The all classes predicted scores provided by network
-        top_num: The max topK number (default: 5)
+        scores: The all classes predicted scores provided by network.
+        top_num: The max topK number (default: 5).
     Returns:
-        predicted_onehot_labels: The predicted labels (onehot)
+        predicted_onehot_labels: The predicted labels (onehot).
     """
     predicted_onehot_labels = []
     scores = np.ndarray.tolist(scores)
@@ -212,11 +209,11 @@ def get_label_threshold(scores, threshold=0.5):
     Note: Only Used in `test_model.py`
 
     Args:
-        scores: The all classes predicted scores provided by network
-        threshold: The threshold (default: 0.5)
+        scores: The all classes predicted scores provided by network.
+        threshold: The threshold (default: 0.5).
     Returns:
-        predicted_labels: The predicted labels
-        predicted_scores: The predicted scores
+        predicted_labels: The predicted labels.
+        predicted_scores: The predicted scores.
     """
     predicted_labels = []
     predicted_scores = []
@@ -244,10 +241,10 @@ def get_label_topk(scores, top_num=1):
     Note: Only Used in `test_model.py`
 
     Args:
-        scores: The all classes predicted scores provided by network
-        top_num: The max topK number (default: 5)
+        scores: The all classes predicted scores provided by network.
+        top_num: The max topK number (default: 5).
     Returns:
-        The predicted labels
+        The predicted labels.
     """
     predicted_labels = []
     predicted_scores = []
@@ -268,16 +265,16 @@ def create_metadata_file(word2vec_file, output_file):
     Create the metadata file based on the corpus file (Used for the Embedding Visualization later).
 
     Args:
-        word2vec_file: The word2vec file
-        output_file: The metadata file path
+        word2vec_file: The word2vec file.
+        output_file: The metadata file path.
     Raises:
-        IOError: If word2vec model file doesn't exist
+        IOError: If word2vec model file doesn't exist.
     """
     if not os.path.isfile(word2vec_file):
         raise IOError("[Error] The word2vec file doesn't exist.")
 
-    model = gensim.models.Word2Vec.load(word2vec_file)
-    word2idx = dict([(k, v.index) for k, v in model.wv.vocab.items()])
+    wv = KeyedVectors.load(word2vec_file, mmap='r')
+    word2idx = dict([(k, v.index) for k, v in wv.vocab.items()])
     word2idx_sorted = [(k, word2idx[k]) for k in sorted(word2idx, key=word2idx.get, reverse=False)]
 
     with open(output_file, 'w+') as fout:
@@ -291,236 +288,131 @@ def create_metadata_file(word2vec_file, output_file):
 
 def load_word2vec_matrix(word2vec_file):
     """
-    Return the word2vec model matrix.
+    Get the word2idx dict and embedding matrix.
 
     Args:
-        word2vec_file: The word2vec file
+        word2vec_file: The word2vec file.
     Returns:
-        The word2vec model matrix
+        word2idx: The word2idx dict.
+        embedding_matrix: The word2vec model matrix.
     Raises:
-        IOError: If word2vec model file doesn't exist
+        IOError: If word2vec model file doesn't exist.
     """
     if not os.path.isfile(word2vec_file):
         raise IOError("[Error] The word2vec file doesn't exist. ")
 
-    model = gensim.models.Word2Vec.load(word2vec_file)
-    vocab_size = model.wv.vectors.shape[0]
-    embedding_size = model.vector_size
-    vocab = dict([(k, v.index) for k, v in model.wv.vocab.items()])
+    wv = KeyedVectors.load(word2vec_file, mmap='r')
+
+    word2idx = OrderedDict({"_UNK": 0})
+    embedding_size = wv.vector_size
+    for k, v in wv.vocab.items():
+        word2idx[k] = v.index + 1
+    vocab_size = len(word2idx)
+
     embedding_matrix = np.zeros([vocab_size, embedding_size])
-    for key, value in vocab.items():
-        if key is not None:
-            embedding_matrix[value] = model[key]
-    return vocab_size, embedding_size, embedding_matrix
+    for key, value in word2idx.items():
+        if key == "_UNK":
+            embedding_matrix[value] = [0. for _ in range(embedding_size)]
+        else:
+            embedding_matrix[value] = wv[key]
+    return word2idx, embedding_matrix
 
 
-def data_word2vec(input_file, num_labels, word2vec_model):
+def load_data_and_labels(args, input_file, word2idx: dict):
     """
-    Create the research data tokenindex based on the word2vec model file.
-    Return the class _Data() (includes the data tokenindex and data labels).
+    Load research data from files, padding sentences and generate one-hot labels.
 
     Args:
-        input_file: The research data
-        num_labels: The number of classes
-        word2vec_model: The word2vec model file
+        args: The arguments.
+        input_file: The research record.
+        word2idx: The word2idx dict.
     Returns:
-        The Class _Data() (includes the data tokenindex and data labels)
+        The dict <Data> (includes the record tokenindex and record labels)
     Raises:
-        IOError: If the input file is not the .json file
+        IOError: If word2vec model file doesn't exist
     """
-    vocab = dict([(k, v.index) for (k, v) in word2vec_model.wv.vocab.items()])
+    if not input_file.endswith('.json'):
+        raise IOError("[Error] The research record is not a json file. "
+                      "Please preprocess the research record into the json file.")
 
-    def _token_to_index(content):
+    def _token_to_index(x: list):
         result = []
-        for item in content:
-            word2id = vocab.get(item)
-            if word2id is None:
-                word2id = 0
-            result.append(word2id)
+        for item in x:
+            if item not in word2idx.keys():
+                result.append(word2idx['_UNK'])
+            else:
+                word_idx = word2idx[item]
+                result.append(word_idx)
         return result
 
     def _create_onehot_labels(labels_index):
-        label = [0] * num_labels
+        label = [0] * args.num_classes
         for item in labels_index:
             label[int(item)] = 1
         return label
 
-    if not input_file.endswith('.json'):
-        raise IOError("[Error] The research data is not a json file. "
-                      "Please preprocess the research data into the json file.")
+    Data = dict()
     with open(input_file) as fin:
-        testid_list = []
-        content_index_list = []
-        labels_list = []
-        onehot_labels_list = []
-        labels_num_list = []
-        total_line = 0
+        Data['id'] = []
+        Data['content_index'] = []
+        Data['labels'] = []
+        Data['onehot_labels'] = []
 
         for eachline in fin:
-            data = json.loads(eachline)
-            testid = data['testid']
-            features_content = data['features_content']
-            labels_index = data['labels_index']
-            labels_num = data['labels_num']
+            record = json.loads(eachline)
+            testid = record['testid']
+            features_content = record['features_content']
+            labels_index = record['labels_index']
 
-            testid_list.append(testid)
-            content_index_list.append(_token_to_index(features_content))
-            labels_list.append(labels_index)
-            onehot_labels_list.append(_create_onehot_labels(labels_index))
-            labels_num_list.append(labels_num)
-            total_line += 1
+            Data['id'].append(testid)
+            Data['content_index'].append(_token_to_index(features_content))
+            Data['labels'].append(labels_index)
+            Data['onehot_labels'].append(_create_onehot_labels(labels_index))
+        Data['pad_seqs'] = pad_sequences(Data['content_index'], maxlen=args.pad_seq_len, value=0.)
 
-    class _Data:
-        def __init__(self):
-            pass
-
-        @property
-        def number(self):
-            return total_line
-
-        @property
-        def testid(self):
-            return testid_list
-
-        @property
-        def tokenindex(self):
-            return content_index_list
-
-        @property
-        def labels(self):
-            return labels_list
-
-        @property
-        def onehot_labels(self):
-            return onehot_labels_list
-
-        @property
-        def labels_num(self):
-            return labels_num_list
-
-    return _Data()
+    if args.data_aug:
+        Data = data_augmented(Data)
+    # plot_seq_len(input_file, Data)
+    return Data
 
 
-def data_augmented(data, drop_rate=1.0):
+def data_augmented(data: dict, drop_rate=1.0):
     """
     Data augment.
 
     Args:
-        data: The Class _Data()
+        data: The dict <Data>
         drop_rate: The drop rate
     Returns:
-        The Class _AugData()
+        The dict <AugData>
     """
-    aug_num = data.number
-    aug_testid = data.testid
-    aug_tokenindex = data.tokenindex
-    aug_labels = data.labels
-    aug_onehot_labels = data.onehot_labels
-    aug_labels_num = data.labels_num
+    AugData = dict()
+    AugData['id'] = data['id']
+    AugData['content_index'] = data['content_index']
+    AugData['labels'] = data['labels']
+    AugData['onehot_labels'] = data['onehot_labels']
 
-    for i in range(len(data.tokenindex)):
-        data_record = data.tokenindex[i]
+    for i in range(len(data['content_index'])):
+        data_record = data['content_index'][i]
         if len(data_record) == 1:  # 句子长度为 1，则不进行增广
             continue
         elif len(data_record) == 2:  # 句子长度为 2，则交换两个词的顺序
             data_record[0], data_record[1] = data_record[1], data_record[0]
-            aug_testid.append(data.testid[i])
-            aug_tokenindex.append(data_record)
-            aug_labels.append(data.labels[i])
-            aug_onehot_labels.append(data.onehot_labels[i])
-            aug_labels_num.append(data.labels_num[i])
-            aug_num += 1
+            AugData['id'].append(data['id'][i] + '-aug')
+            AugData['content_index'].append(data_record)
+            AugData['labels'].append(data['labels'][i])
+            AugData['onehot_labels'].append(data['onehot_labels'][i])
         else:
             data_record = np.array(data_record)
             for num in range(len(data_record) // 10):  # 打乱词的次数，次数即生成样本的个数；次数根据句子长度而定
                 # random shuffle & random drop
                 data_shuffled = np.random.permutation(np.arange(int(len(data_record) * drop_rate)))
                 new_data_record = data_record[data_shuffled]
-
-                aug_testid.append(data.testid[i])
-                aug_tokenindex.append(list(new_data_record))
-                aug_labels.append(data.labels[i])
-                aug_onehot_labels.append(data.onehot_labels[i])
-                aug_labels_num.append(data.labels_num[i])
-                aug_num += 1
-
-    class _AugData:
-        def __init__(self):
-            pass
-
-        @property
-        def number(self):
-            return aug_num
-
-        @property
-        def testid(self):
-            return aug_testid
-
-        @property
-        def tokenindex(self):
-            return aug_tokenindex
-
-        @property
-        def labels(self):
-            return aug_labels
-
-        @property
-        def onehot_labels(self):
-            return aug_onehot_labels
-
-        @property
-        def labels_num(self):
-            return aug_labels_num
-
-    return _AugData()
-
-
-def load_data_and_labels(data_file, num_labels, word2vec_file, data_aug_flag):
-    """
-    Load research data from files, splits the data into words and generates labels.
-    Return split sentences, labels and the max sentence length of the research data.
-
-    Args:
-        data_file: The research data
-        num_labels: The number of classes
-        word2vec_file: The word2vec model file
-        data_aug_flag: The flag of data augmented
-    Returns:
-        The class _Data()
-    Raises:
-        IOError: If word2vec model file doesn't exist
-    """
-    # Load word2vec file
-    if not os.path.isfile(word2vec_file):
-        raise IOError("[Error] The word2vec file doesn't exist. ")
-
-    model = word2vec.Word2Vec.load(word2vec_file)
-
-    # Load data from files and split by words
-    data = data_word2vec(input_file=data_file, num_labels=num_labels, word2vec_model=model)
-    if data_aug_flag:
-        data = data_augmented(data)
-
-    # plot_seq_len(data_file, data)
-
-    return data
-
-
-def pad_data(data, pad_seq_len):
-    """
-    Padding each sentence of research data according to the max sentence length.
-    Return the padded data and data labels.
-
-    Args:
-        data: The research data
-        pad_seq_len: The max sentence length of research data
-    Returns:
-        pad_seq: The padded data
-        labels: The data labels
-    """
-    pad_seq = pad_sequences(data.tokenindex, maxlen=pad_seq_len, value=0.)
-    onehot_labels = data.onehot_labels
-    return pad_seq, onehot_labels
+                AugData['id'].append(data['id'][i] + '-aug')
+                AugData['content_index'].append(list(new_data_record))
+                AugData['labels'].append(data['labels'][i])
+                AugData['onehot_labels'].append(data['onehot_labels'][i])
+    return AugData
 
 
 def plot_seq_len(data_file, data, percentage=0.98):
@@ -538,8 +430,9 @@ def plot_seq_len(data_file, data, percentage=0.98):
         output_file = ANALYSIS_DIR + 'Validation Sequence Length Distribution Histogram.png'
     if 'test' in data_file.lower():
         output_file = ANALYSIS_DIR + 'Test Sequence Length Distribution Histogram.png'
+    data_number = len(data['content_index'])
     result = dict()
-    for x in data.tokenindex:
+    for x in data['content_index']:
         if len(x) not in result.keys():
             result[len(x)] = 1
         else:
@@ -555,9 +448,9 @@ def plot_seq_len(data_file, data, percentage=0.98):
         y.append(item[1])
         avg += item[0] * item[1]
         count += item[1]
-        if count > data.number * percentage:
+        if count > data_number * percentage:
             border_index.append(item[0])
-    avg = avg / data.number
+    avg = avg / data_number
     print('The average of the data sequence length is {0}'.format(avg))
     print('The recommend of padding sequence length should more than {0}'.format(border_index[0]))
     xlim(0, 400)
@@ -573,12 +466,12 @@ def batch_iter(data, batch_size, num_epochs, shuffle=True):
     批量生成 (yield) 一批一批的重洗过的 data，每批大小是 batch_size，一共生成 int(len(data)/batch_size)+1 批。
 
     Args:
-        data: The data
-        batch_size: The size of the data batch
-        num_epochs: The number of epochs
-        shuffle: Shuffle or not (default: True)
+        data: The data.
+        batch_size: The size of the data batch.
+        num_epochs: The number of epochs.
+        shuffle: Shuffle or not (default: True).
     Returns:
-        A batch iterator for data set
+        A batch iterator for data set.
     """
     data = np.array(data)
     data_size = len(data)

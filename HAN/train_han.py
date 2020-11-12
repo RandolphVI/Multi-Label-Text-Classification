@@ -11,7 +11,6 @@ logging.getLogger('tensorflow').disabled = True
 
 import numpy as np
 import tensorflow as tf
-
 from tensorboard.plugins import projector
 from text_han import TextHAN
 from utils import checkmate as cm
@@ -24,23 +23,23 @@ OPTION = dh._option(pattern=0)
 logger = dh.logger_fn("tflog", "logs/{0}-{1}.log".format('Train' if OPTION == 'T' else 'Restore', time.asctime()))
 
 
+def create_input_data(data: dict):
+    return zip(data['pad_seqs'], data['onehot_labels'])
+
+
 def train_han():
     """Training HAN model."""
     # Print parameters used for the model
     dh.tab_printer(args, logger)
 
+    # Load word2vec model
+    word2idx, embedding_matrix = dh.load_word2vec_matrix(args.word2vec_file)
+
     # Load sentences, labels, and training parameters
     logger.info("Loading data...")
     logger.info("Data processing...")
-    train_data = dh.load_data_and_labels(args.train_file, args.num_classes, args.word2vec_file, data_aug_flag=False)
-    val_data = dh.load_data_and_labels(args.validation_file, args.num_classes, args.word2vec_file, data_aug_flag=False)
-
-    logger.info("Data padding...")
-    x_train, y_train = dh.pad_data(train_data, args.pad_seq_len)
-    x_val, y_val = dh.pad_data(val_data, args.pad_seq_len)
-
-    # Build vocabulary
-    VOCAB_SIZE, EMBEDDING_SIZE, pretrained_word2vec_matrix = dh.load_word2vec_matrix(args.word2vec_file)
+    train_data = dh.load_data_and_labels(args, args.train_file, word2idx)
+    val_data = dh.load_data_and_labels(args, args.validation_file, word2idx)
 
     # Build a graph and han object
     with tf.Graph().as_default():
@@ -52,20 +51,22 @@ def train_han():
         with sess.as_default():
             han = TextHAN(
                 sequence_length=args.pad_seq_len,
-                vocab_size=VOCAB_SIZE,
+                vocab_size=len(word2idx),
                 embedding_type=args.embedding_type,
-                embedding_size=EMBEDDING_SIZE,
+                embedding_size=args.embedding_dim,
                 lstm_hidden_size=args.lstm_dim,
                 fc_hidden_size=args.fc_dim,
                 num_classes=args.num_classes,
                 l2_reg_lambda=args.l2_lambda,
-                pretrained_embedding=pretrained_word2vec_matrix)
+                pretrained_embedding=embedding_matrix)
 
             # Define training procedure
             with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
                 learning_rate = tf.train.exponential_decay(learning_rate=args.learning_rate,
-                                                           global_step=han.global_step, decay_steps=args.decay_steps,
-                                                           decay_rate=args.decay_rate, staircase=True)
+                                                           global_step=han.global_step,
+                                                           decay_steps=args.decay_steps,
+                                                           decay_rate=args.decay_rate,
+                                                           staircase=True)
                 optimizer = tf.train.AdamOptimizer(learning_rate)
                 grads, vars = zip(*optimizer.compute_gradients(han.loss))
                 grads, _ = tf.clip_by_global_norm(grads, clip_norm=args.norm_ratio)
@@ -131,11 +132,13 @@ def train_han():
 
             current_step = sess.run(han.global_step)
 
-            def train_step(x_batch, y_batch):
+            def train_step(batch_data):
                 """A single training step"""
+                x, y_onehot = zip(*batch_data)
+
                 feed_dict = {
-                    han.input_x: x_batch,
-                    han.input_y: y_batch,
+                    han.input_x: x,
+                    han.input_y: y_onehot,
                     han.dropout_keep_prob: args.dropout_rate,
                     han.is_training: True
                 }
@@ -144,13 +147,12 @@ def train_han():
                 logger.info("step {0}: loss {1:g}".format(step, loss))
                 train_summary_writer.add_summary(summaries, step)
 
-            def validation_step(x_val, y_val, writer=None):
-                """Evaluates model on a validation set"""
-                batches_validation = dh.batch_iter(list(zip(x_val, y_val)), args.batch_size, 1)
+            def validation_step(val_loader, writer=None):
+                """Evaluates model on a validation set."""
+                batches_validation = dh.batch_iter(list(create_input_data(val_loader)), args.batch_size, 1)
 
                 # Predict classes by threshold or topk ('ts': threshold; 'tk': topk)
                 eval_counter, eval_loss = 0, 0.0
-
                 eval_pre_tk = [0.0] * args.topK
                 eval_rec_tk = [0.0] * args.topK
                 eval_F1_tk = [0.0] * args.topK
@@ -161,10 +163,10 @@ def train_han():
                 predicted_onehot_labels_tk = [[] for _ in range(args.topK)]
 
                 for batch_validation in batches_validation:
-                    x_batch_val, y_batch_val = zip(*batch_validation)
+                    x, y_onehot = zip(*batch_validation)
                     feed_dict = {
-                        han.input_x: x_batch_val,
-                        han.input_y: y_batch_val,
+                        han.input_x: x,
+                        han.input_y: y_onehot,
                         han.dropout_keep_prob: 1.0,
                         han.is_training: False
                     }
@@ -172,7 +174,7 @@ def train_han():
                         [han.global_step, validation_summary_op, han.scores, han.loss], feed_dict)
 
                     # Prepare for calculating metrics
-                    for i in y_batch_val:
+                    for i in y_onehot:
                         true_onehot_labels.append(i)
                     for j in scores:
                         predicted_onehot_scores.append(j)
@@ -180,14 +182,12 @@ def train_han():
                     # Predict by threshold
                     batch_predicted_onehot_labels_ts = \
                         dh.get_onehot_label_threshold(scores=scores, threshold=args.threshold)
-
                     for k in batch_predicted_onehot_labels_ts:
                         predicted_onehot_labels_ts.append(k)
 
                     # Predict by topK
                     for top_num in range(args.topK):
                         batch_predicted_onehot_labels_tk = dh.get_onehot_label_topk(scores=scores, top_num=top_num+1)
-
                         for i in batch_predicted_onehot_labels_tk:
                             predicted_onehot_labels_tk[top_num].append(i)
 
@@ -229,30 +229,24 @@ def train_han():
                        eval_pre_tk, eval_rec_tk, eval_F1_tk
 
             # Generate batches
-            batches_train = dh.batch_iter(
-                list(zip(x_train, y_train)), args.batch_size, args.epochs)
-
-            num_batches_per_epoch = int((len(x_train) - 1) / args.batch_size) + 1
+            batches_train = dh.batch_iter(list(create_input_data(train_data)), args.batch_size, args.epochs)
+            num_batches_per_epoch = int((len(train_data['pad_seqs']) - 1) / args.batch_size) + 1
 
             # Training loop. For each batch...
             for batch_train in batches_train:
-                x_batch_train, y_batch_train = zip(*batch_train)
-                train_step(x_batch_train, y_batch_train)
+                train_step(batch_train)
                 current_step = tf.train.global_step(sess, han.global_step)
 
                 if current_step % args.evaluate_steps == 0:
                     logger.info("\nEvaluation:")
                     eval_loss, eval_auc, eval_prc, \
                     eval_pre_ts, eval_rec_ts, eval_F1_ts, eval_pre_tk, eval_rec_tk, eval_F1_tk = \
-                        validation_step(x_val, y_val, writer=validation_summary_writer)
-
+                        validation_step(val_data, writer=validation_summary_writer)
                     logger.info("All Validation set: Loss {0:g} | AUC {1:g} | AUPRC {2:g}"
                                 .format(eval_loss, eval_auc, eval_prc))
-
                     # Predict by threshold
                     logger.info("Predict by threshold: Precision {0:g}, Recall {1:g}, F1 {2:g}"
                                 .format(eval_pre_ts, eval_rec_ts, eval_F1_ts))
-
                     # Predict by topK
                     logger.info("Predict by topK:")
                     for top_num in range(args.topK):

@@ -11,7 +11,6 @@ sys.path.append('../')
 logging.getLogger('tensorflow').disabled = True
 
 import tensorflow as tf
-
 from utils import checkmate as cm
 from utils import data_helpers as dh
 from utils import param_parser as parser
@@ -26,21 +25,24 @@ BEST_CPT_DIR = 'runs/' + MODEL + '/bestcheckpoints/'
 SAVE_DIR = 'output/' + MODEL
 
 
+def create_input_data(data: dict):
+    return zip(data['pad_seqs'], data['onehot_labels'], data['labels'])
+
+
 def test_rnn():
     """Test RNN model."""
     # Print parameters used for the model
     dh.tab_printer(args, logger)
 
+    # Load word2vec model
+    word2idx, embedding_matrix = dh.load_word2vec_matrix(args.word2vec_file)
+
     # Load data
     logger.info("Loading data...")
     logger.info("Data processing...")
-    test_data = dh.load_data_and_labels(args.test_file, args.num_classes, args.word2vec_file, data_aug_flag=False)
+    test_data = dh.load_data_and_labels(args, args.test_file, word2idx)
 
-    logger.info("Data padding...")
-    x_test, y_test = dh.pad_data(test_data, args.pad_seq_len)
-    y_test_labels = test_data.labels
-
-    # Load rcnn model
+    # Load rnn model
     OPTION = dh._option(pattern=1)
     if OPTION == 'B':
         logger.info("Loading best model...")
@@ -81,10 +83,10 @@ def test_rnn():
             tf.train.write_graph(output_graph_def, "graph", "graph-rnn-{0}.pb".format(MODEL), as_text=False)
 
             # Generate batches for one epoch
-            batches = dh.batch_iter(list(zip(x_test, y_test, y_test_labels)), args.batch_size, 1, shuffle=False)
+            batches = dh.batch_iter(list(create_input_data(test_data)), args.batch_size, 1, shuffle=False)
 
+            # Collect the predictions here
             test_counter, test_loss = 0, 0.0
-
             test_pre_tk = [0.0] * args.topK
             test_rec_tk = [0.0] * args.topK
             test_F1_tk = [0.0] * args.topK
@@ -101,17 +103,18 @@ def test_rnn():
             predicted_onehot_labels_tk = [[] for _ in range(args.topK)]
 
             for batch_test in batches:
-                x_batch_test, y_batch_test, y_batch_test_labels = zip(*batch_test)
+                x, y_onehot, y = zip(*batch_test)
                 feed_dict = {
-                    input_x: x_batch_test,
-                    input_y: y_batch_test,
+                    input_x: x,
+                    input_y: y_onehot,
                     dropout_keep_prob: 1.0,
                     is_training: False
                 }
+
                 batch_scores, cur_loss = sess.run([scores, loss], feed_dict)
 
                 # Prepare for calculating metrics
-                for i in y_batch_test:
+                for i in y_onehot:
                     true_onehot_labels.append(i)
                 for j in batch_scores:
                     predicted_onehot_scores.append(j)
@@ -121,7 +124,7 @@ def test_rnn():
                     dh.get_label_threshold(scores=batch_scores, threshold=args.threshold)
 
                 # Add results to collection
-                for i in y_batch_test_labels:
+                for i in y:
                     true_labels.append(i)
                 for j in batch_predicted_labels_ts:
                     predicted_labels.append(j)
@@ -188,9 +191,9 @@ def test_rnn():
             # Save the prediction result
             if not os.path.exists(SAVE_DIR):
                 os.makedirs(SAVE_DIR)
-            dh.create_prediction_file(output_file=SAVE_DIR + "/predictions.json", data_id=test_data.testid,
-                                      all_labels=true_labels, all_predict_labels=predicted_labels,
-                                      all_predict_scores=predicted_scores)
+            dh.create_prediction_file(output_file=SAVE_DIR + "/predictions.json", data_id=test_data['id'],
+                                      true_labels=true_labels, predict_labels=predicted_labels,
+                                      predict_scores=predicted_scores)
 
     logger.info("All Done.")
 
